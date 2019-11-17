@@ -33,7 +33,7 @@ You can use either conda or pip to install the project requirements.
 sudo pip install -r ./requirements.txt
 ```
 
-This project uses a customized version of [Aletheia Library](aletheia/README.md), [Perceptual Similarity Librarie](lpips-tensorflow/README.md) and [SSIM Similarity Librarie](pyssim/README.md). You should refer their installation instructions (in the previous links) for guidance on how to set them up (for instance Aletheia requires Octave).
+This project uses a customized version of [Aletheia Library](aletheia/README.md), [Perceptual Similarity Library](lpips-tensorflow/README.md) and [SSIM Similarity Library](pyssim/README.md). You should refer to their installation instructions (in the previous links) for guidance on how to set them up (for instance Aletheia requires Octave).
 
 if your machine does not support gpu, replace *tensorflow-gpu* in the requirements file by the CPU version.
 
