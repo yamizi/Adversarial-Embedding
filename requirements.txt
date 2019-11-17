@@ -1,0 +1,14 @@
+#Keras==2.1.6
+Keras==2.2.2
+tensorflow-gpu==1.14.0
+scikit-image==0.15.0
+scikit-learn==0.21.2
+scipy==1.2.1
+validators==0.12.4
+adversarial-robustness-toolbox==0.9.0
+numpy_indexed>=0.3.5
+pandas>=0.22.0
+Pillow==5.4.1
+Stegano==0.9.4
+beautifulsoup4==4.8.0
+hdf5storage
