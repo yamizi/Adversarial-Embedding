@@ -37,6 +37,9 @@ This project uses a customized version of [Aletheia Library](aletheia/README.md)
 
 if your machine does not support gpu, replace *tensorflow-gpu* in the requirements file by the CPU version.
 
-Not however that the experiments that have been run on 100 pre-sampled models require to sample and generate these models using [FeatureNet](https://github.com/yamizi/FeatureNet) 
+### Deep Learning Models installation
 
-FeatureNet is a tool that allows to generate a DNN neural networks under the constraint of diversity.
+The current repository contains the code to build the ResNet and KerasNet classification model.
+The experiments that have been run on 100 pre-sampled models require however to sample and generate these models using [FeatureNet](https://github.com/yamizi/FeatureNet) 
+
+FeatureNet is a tool that allows to generate a large number of DNN neural networks under the constraint of diversity. This ensures that our experiments cover a large span of architectures and models.
