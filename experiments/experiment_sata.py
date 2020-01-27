@@ -38,7 +38,7 @@ def _encodeString(txt):
     return str(int(txt, base))
 
 
-def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP31"):
+def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
 
 
     
@@ -102,7 +102,7 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP31"):
             for j in range(nb_trials):
                 msg = "".join([strs[random.randint(0,len(strs)-1)] for i in range(l)])
                 encoded_msg = _encodeString(msg)
-                # logger.info("Encode message {}=>{}".format(msg,encoded_msg))
+                logger.info("Encode message {}=>{}".format(msg,encoded_msg))
 
                 groups = SATA.embed_message(None,None,encoded_msg, epsilon=None,class_density=num_embedded_classes/num_classes,num_classes=num_classes,groups_only=True)
                 # logger.info("{}:{}".format(num_embedded_classes,len(groups)))

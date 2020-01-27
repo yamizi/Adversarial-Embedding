@@ -63,7 +63,6 @@ class KerasClassifier(Classifier):
         """
         super(KerasClassifier, self).__init__(clip_values=clip_values, channel_index=channel_index, defences=defences,
                                               preprocessing=preprocessing)
-
         self._model = model
         self._input_layer = input_layer
         self._output_layer = output_layer
@@ -261,14 +260,13 @@ class KerasClassifier(Classifier):
         :return: Array of predictions of shape `(nb_inputs, self.nb_classes)`.
         :rtype: `np.ndarray`
         """
-        from art import NUMPY_DTYPE
 
         # Apply defences
         x_preproc = self._apply_processing(x)
         x_preproc, _ = self._apply_defences(x_preproc, None, fit=False)
 
         # Run predictions with batching
-        preds = np.zeros((x_preproc.shape[0], self.nb_classes), dtype=NUMPY_DTYPE)
+        preds = np.zeros((x_preproc.shape[0], self.nb_classes))
         for batch_index in range(int(np.ceil(x_preproc.shape[0] / float(batch_size)))):
             begin, end = batch_index * batch_size, min((batch_index + 1) * batch_size, x_preproc.shape[0])
             preds[begin:end] = self._preds([x_preproc[begin:end]])[0]

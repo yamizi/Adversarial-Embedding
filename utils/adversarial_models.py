@@ -2,7 +2,6 @@
 import numpy as np
 from art.attacks import ProjectedGradientDescent, DeepFool, CarliniL2Method
 from art.classifiers import KerasClassifier
-from art import NUMPY_DTYPE
 from art.utils import compute_success, get_labels_np_array, random_sphere, tanh_to_original, original_to_tanh
 import keras
 from utils.basic_cifar_cnn import get_model as basic_model, get_dataset as cifar_dataset
@@ -167,7 +166,7 @@ class TrackedCW(CarliniL2Method):
         :return: An array holding the adversarial examples.
         :rtype: `np.ndarray`
         """
-        x_adv = x.astype(NUMPY_DTYPE)
+        x_adv = x#.astype(NUMPY_DTYPE)
         if hasattr(self.classifier, 'clip_values') and self.classifier.clip_values is not None:
             clip_min, clip_max = self.classifier.clip_values
         else:
@@ -380,7 +379,6 @@ class TrackedPGD(ProjectedGradientDescent):
         :rtype: `np.ndarray`
         """
         
-        from art import NUMPY_DTYPE
         from art.utils import compute_success, get_labels_np_array, projection
 
         if y is None:
@@ -397,7 +395,7 @@ class TrackedPGD(ProjectedGradientDescent):
         rate_best = 0.0
 
         for i_random_init in range(max(1, self.num_random_init)):
-            adv_x = x.astype(NUMPY_DTYPE)
+            adv_x = x#.astype(NUMPY_DTYPE)
             noise = np.zeros_like(x)
             for i_max_iter in range(self.max_iter):
 
@@ -432,6 +430,16 @@ class TrackedPGD(ProjectedGradientDescent):
 
         return adv_x_best
 
+def load_dataset(dataset="cifar10"):
+    num_classes, x_train, y_train, x_test, y_test = None,None,None,None,None
+    if dataset=="cifar10":
+        num_classes, x_train, y_train, x_test, y_test = cifar_dataset()
+    elif dataset=="cifar100":
+        num_classes, x_train, y_train, x_test, y_test = cifar_dataset("cifar100")
+    elif dataset=="tiny_imagenet":
+        num_classes, x_train, y_train, x_test, y_test = tiny_imagenet_dataset()
+
+    return num_classes, x_train, y_train, x_test, y_test
 
 def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batch_size=64, data_augmentation=True):
     from keras.utils import multi_gpu_model
@@ -451,15 +459,11 @@ def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batc
         model_path = os.path.join(save_dir, model_name)
         model = None
 
-    if dataset=="cifar10":
-        num_classes, x_train, y_train, x_test, y_test = cifar_dataset()
-    elif dataset=="cifar100":
-        num_classes, x_train, y_train, x_test, y_test = cifar_dataset("cifar100")
-    elif dataset=="tiny_imagenet":
-        num_classes, x_train, y_train, x_test, y_test = tiny_imagenet_dataset()
+    
     # elif dataset=="mnist":
     #     num_classes, x_train, y_train, x_test, y_test = minst_dataset()
 
+    num_classes, x_train, y_train, x_test, y_test = load_dataset(dataset)
     
     if os.path.isfile(model_path):
         print("Loading existing model {}".format(model_path))

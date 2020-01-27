@@ -25,6 +25,7 @@ def init_kernel_densities(model, X_train, Y_train, batch_size=256, dataset="cifa
         
     X_train_features = get_deep_representations(model, X_train,batch_size=batch_size)
     for i in range(Y_train.shape[1]):
+        #print("uncertainty",X_train_features.shape,class_inds,Y_train.shape)
         kernel_densities[i] = KernelDensity(kernel='gaussian', bandwidth=BANDWIDTHS[dataset]).fit(X_train_features[class_inds[i]])
 
 def eval_kernel_density(model, X, batch_size=256, reset_kde=False, **args):

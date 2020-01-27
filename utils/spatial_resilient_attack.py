@@ -8,7 +8,6 @@ import numpy as np
 
 from keras.utils import to_categorical
 from keras.preprocessing.image import img_to_array, array_to_img, save_img, load_img
-from art import NUMPY_DTYPE
 from art.attacks import FastGradientMethod
 from art.utils import get_labels_np_array, projection, random_sphere
 from PIL import Image
@@ -78,14 +77,14 @@ class SpatialResilientPGD(ProjectedGradientDescent):
         if random_init:
             n = x.shape[0]
             m = np.prod(x.shape[1:])
-            adv_x = x.astype(NUMPY_DTYPE) + random_sphere(n, m, eps, self.norm).reshape(x.shape)
-
+            #adv_x = x.astype(NUMPY_DTYPE) + random_sphere(n, m, eps, self.norm).reshape(x.shape)
+            adv_x = x + random_sphere(n, m, eps, self.norm).reshape(x.shape)
             if hasattr(self.classifier, 'clip_values') and self.classifier.clip_values is not None:
                 clip_min, clip_max = self.classifier.clip_values
                 adv_x = np.clip(adv_x, clip_min, clip_max)
         else:
-            adv_x = x.astype(NUMPY_DTYPE)
-
+            adv_x = x#.astype(NUMPY_DTYPE)
+            
         # Compute perturbation with implicit batching
         for batch_id in range(int(np.ceil(adv_x.shape[0] / float(self.batch_size)))):
             batch_index_1, batch_index_2 = batch_id * self.batch_size, (batch_id + 1) * self.batch_size
@@ -162,7 +161,7 @@ class SpatialResilientPGD(ProjectedGradientDescent):
         rate_best = 0.0
 
         for i_random_init in range(max(1, self.num_random_init)):
-            adv_x = x.astype(NUMPY_DTYPE)
+            adv_x = x#.astype(NUMPY_DTYPE)
 
             for i_max_iter in range(self.max_iter):
 

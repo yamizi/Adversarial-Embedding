@@ -32,7 +32,6 @@ from scipy.stats import weibull_min
 from utils.adversarial_models import TrackedPGD, TrackedCW
 from art.attacks import FastGradientMethod, CarliniL2Method, ProjectedGradientDescent, SaliencyMapMethod
 from art.utils import random_sphere
-from art import NUMPY_DTYPE
 
 logger = logging.getLogger(__name__)
 
@@ -292,7 +291,7 @@ def clever_t(classifier, x, target_class, nb_batches, batch_size, radius, norm, 
     rand_pool = np.reshape(random_sphere(nb_points=pool_factor * batch_size, nb_dims=dim, radius=radius, norm=norm),
                            shape)
     rand_pool += np.repeat(np.array([x]), pool_factor * batch_size, 0)
-    rand_pool = rand_pool.astype(NUMPY_DTYPE)
+    #rand_pool = rand_pool.astype(NUMPY_DTYPE)
     if hasattr(classifier, 'clip_values') and classifier.clip_values is not None:
         np.clip(rand_pool, classifier.clip_values[0], classifier.clip_values[1], out=rand_pool)
 

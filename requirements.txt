@@ -12,3 +12,4 @@ Pillow>=6.2.0
 Stegano==0.9.4
 beautifulsoup4==4.8.0
 hdf5storage
+tqdm

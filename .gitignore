@@ -1,0 +1,9 @@
+*.pyc
+__pychache__/
+.vscode/
+
+*.pdt
+*.out
+*.sh
+results/*
+experiments/*
