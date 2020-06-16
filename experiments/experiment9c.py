@@ -18,9 +18,10 @@ from keras.preprocessing.image import save_img, load_img, img_to_array, array_to
             
 import numpy as np
 import random, json, time, os, math
-from utils.adversarial_models import load_model
+from utils.adversarial_models import load_model, load_dataset
 from metrics.attacks import craft_attack
-from metrics.perceptual_metrics import lpips_distance, ssim_distance
+import gc
+from keras.backend.tensorflow_backend import set_session, clear_session, get_session
 
 from PIL import Image
 
@@ -31,12 +32,16 @@ default_extension = "png"
 palette = 256
 
 
-def _psnr_loss(img1, img2):
-    mse = np.mean( (img1 - img2) ** 2 )
-    if mse == 0:
-        return 100
-    PIXEL_MAX = 255.0
-    return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
+def reset_memory():
+    sess = get_session()
+    clear_session()
+    sess.close()
+
+    # use the same config as you used to create the session
+    config = tf.ConfigProto() #allow_soft_placement=True, log_device_placement=True)
+    set_session(tf.Session(config=config))
+    print("clean memory",gc.collect())
+        
 
 
 def _encodeString(txt):
@@ -74,49 +79,38 @@ def _compress_img(img, rate=75, format='jpeg', palette=256):
 def _decode(dataset, model_type, epochs, experiment_id,attack_name, experiment_time, extension=None, advs=None):
     if not extension:
         extension = default_extension
-    pictures_path = default_path.format(experiment_id,attack_name, experiment_time)
     model, x_train, x_test, y_train, y_test = load_model(dataset=dataset, model_type=model_type, epochs=epochs)
     score = []
 
-    if advs:
-        for adv in advs:
-            file = adv["file"]
-            image = adv["img"]
-            
-            if len(image.size)<3:
-                image = image.convert("RGB")
-            if image.width<32:
-                image = image.resize((32,32),Image.BILINEAR)
-            img = img_to_array(image)/palette
-            img_class = np.argmax(model.predict(np.array([img]),verbose=0))
-            index = file.index("_truth") -1
-            real_class = int(file[index:index+1])
-            logger.info("img {} decoded as {}".format(file,img_class))
-            
-            score.append(real_class==img_class)
-    else:
-        for file in os.listdir(pictures_path):
-            if file.endswith(".{}".format(extension)):
-                path = "{}/{}".format(pictures_path,file)
-                img = img_to_array(load_img(path))/palette
-                img_class = np.argmax(model.predict(np.array([img]),verbose=0))
-                index = file.index("_truth") -1
-                real_class = int(file[index:index+1])
-                logger.info("img {} decoded as {}".format(file,img_class))
-                
-                score.append(real_class==img_class)
+    for adv in advs:
+        real_class = adv["class"]
+        image = adv["img"]
+        
+        if len(image.size)<3:
+            image = image.convert("RGB")
+        if image.width<32:
+            image = image.resize((32,32),Image.BILINEAR)
+        img = img_to_array(image)/palette
+        img_class = np.argmax(model.predict(np.array([img]),verbose=0))
+        logger.info("img {} decoded as {}".format(real_class,img_class))
+        
+        score.append(real_class==img_class)
 
     decoding_score = np.mean(np.array(score))
     logger.info("decoding score {}".format(decoding_score))
     return decoding_score
 
-def _encode_adv(msg,dataset, model_type, epochs, experiment_id,attack_name, attack_strength=2.0):
+def _encode_adv(msg,dataset, model_type, epochs, experiment_id,attack_name, attack_strength=2.0, model=None):
 
     encoded_msg = _encodeString(msg)
     logger.info("Encode message {}=>{}".format(msg,encoded_msg))
     test_size = len(encoded_msg)
 
-    model, x_train, x_test, y_train, y_test = load_model(dataset=dataset, model_type=model_type, epochs=epochs)
+    if model is None:
+        model, x_train, x_test, y_train, y_test = load_model(dataset=dataset, model_type=model_type, epochs=epochs)
+    else:
+        num_classes, x_train, y_train, x_test, y_test = load_dataset(dataset=dataset)
+        
     num_classes= 10
 
     combined = list(zip(x_test, y_test))
@@ -167,6 +161,11 @@ def _encode(msg,dataset, model_type, epochs, experiment_id, attack_name, attack_
 
     return experiment_time
 
+def _transmit(adv_x,y):
+    for index, _adv in enumerate(adv_x):
+        img_adv = array_to_img(_adv)
+        yield {"class":np.argmax(y[index]),"img":img_adv}
+        
 def run(dataset="cifar10",model_type="basic", epochs = 25, experiment_id="SP9c"):
 
     attack_name = "targeted_pgd"
@@ -186,48 +185,52 @@ def run(dataset="cifar10",model_type="basic", epochs = 25, experiment_id="SP9c")
     recovery_rates = []
     extension = "h5"
     models_path = "../products/run31c/cifar/ee50_te300_mr0.1_sr0.2_1565783786"
-    max_models = 150
-    skip = 0
-    with open("{}/{}.json".format(folder, experiment_time), 'a') as f:
-        f.write("[")
+    skip_models = 90
+    index = 0
             
-    for file in os.listdir(models_path):
-        if max_models ==0:
-            break
-        if (file.startswith("e4") or file.startswith("e5") or file.startswith("e6") ) and file.endswith(".{}".format(extension)):
+    for src in os.listdir(models_path): 
+        if (src.startswith("e4") or src.startswith("e5") or src.startswith("e6") ) and src.endswith(".{}".format(extension)):
             
-            if skip>0:
-                skip = skip-1
+            reset_memory()
+            index = index + 1 
+            if index<=skip_models :
                 continue
 
-            max_models = max_models-1
-            model_type = "{}/{}".format(models_path,file)
-            exp_time = 0
-            atk_strength = 5.0
+            max_models = 100
+            model_src = "{}/{}".format(models_path,src)
+            exp_time = "{}_{}".format(experiment_time,src[:10])
+            atk_strength = 2.0
 
-            x, y, adv_x, model, targets = _encode_adv(msg, dataset, "basic", epochs, experiment_id,attack_name,attack_strength=atk_strength)
+            x, y, adv_x, model, targets = _encode_adv(msg, dataset, model_src, epochs, experiment_id,attack_name,attack_strength=atk_strength)
             pre_computed = (x, y, adv_x, model, targets)
             
-            experiment_id = "SP9c/1"
-            advs = _encode(msg, dataset, model_type, epochs, experiment_id,attack_name,attack_strength=atk_strength,extension = extension, pre_computed=pre_computed)
-            rate_recovery = _decode( dataset, model_type, epochs, experiment_id,attack_name,exp_time,extension = extension, advs=advs)
-            
-            rate = {"model":file,"decoding_recovery":rate_recovery}
-            recovery_rates.append(rate)
+            advs = list(_transmit(adv_x,targets))
 
-            with open("{}/{}.json".format(folder, experiment_time), 'a') as f:
-                f.write("{},".format(json.dumps(rate)))
+            with open("{}/{}.json".format(folder, exp_time), 'a') as f:
+                f.write("[")
 
-    logger.info(recovery_rates)
-    with open("{}/{}.json".format(folder, experiment_time), 'a') as f:
-            f.write("]")
-    
-    
+            for file in os.listdir(models_path):
+                if max_models ==0 :#or file==src:
+                    break
+                if (file.startswith("e4") or file.startswith("e5") or file.startswith("e6") ) and file.endswith(".{}".format(extension)):
+                    
+                    model_type = "{}/{}".format(models_path,file)
+                    max_models = max_models-1
+                    
+                    rate_recovery = _decode( dataset, model_type, epochs, experiment_id,attack_name,exp_time,extension = extension, advs=advs)
+                    
+                    rate = {"model":file,"decoding_recovery":rate_recovery}
+                    recovery_rates.append(rate)
+
+                    with open("{}/{}.json".format(folder, exp_time), 'a') as f:
+                        f.write("{},".format(json.dumps(rate)))
+
+            logger.info(recovery_rates)
+            with open("{}/{}.json".format(folder, exp_time), 'a') as f:
+                    f.write("]")
     return 
 
 
     
-
-    
 if __name__ == "__main__":
-    run(model_type="basic")
+    run(model_type="basic",experiment_id="SP9c_grid")

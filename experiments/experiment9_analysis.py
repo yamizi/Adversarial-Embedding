@@ -16,6 +16,8 @@ import json
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
 from matplotlib.ticker import PercentFormatter
 from scipy import stats
 
@@ -44,6 +46,10 @@ def runa(experiment_time="1571050357"):
     upscale_recovery = np.array(upscale_recovery)
     compress_recovery = np.array(compress_recovery)
 
+    return rotate_recovery,crop_recovery,upscale_recovery,compress_recovery
+
+
+
     suffix = "recovery rate ({} models)".format(len(f))
     n_bins = 20
     m = 0
@@ -51,8 +57,10 @@ def runa(experiment_time="1571050357"):
     metrics = {"rotate_recovery":("Post Rotation",rotate_recovery),"crop_recovery":("Post Cropping",crop_recovery),"upscale_recovery":("Post Upscaling",upscale_recovery),"compress75_recovery":("Post Compression (quality=75)",compress_recovery)}
     
     #metrics = {"ssim":("SSIM",ssim),"lpips":("LPIPS",lpips),"psnr":("PSNR",psnr),"color_depth_recovery":("Post Color Depth Reduction",color_recovery),"compress50_recovery":("Post Compression (quality=50)",compress50_recovery),"compress90_recovery":("Post Compression (quality=90)",compress90_recovery)}
-    
-    plot_metrics(metrics, suffix)
+
+
+
+    #plot_metrics(metrics, suffix)
 
     # plt.figure()
     # plt.title("Post Rotation {}".format(suffix))
@@ -181,18 +189,20 @@ def runb(experiment_time="1572371338"):
     compress50_recovery = np.array(compress50_recovery)
     compress90_recovery = np.array(compress90_recovery)
 
-    tbl = lpips
-    indices = np.arange(len(tbl))
-    plt.scatter(indices,tbl,s=45)
-    keras_value = keras_values.get("lpips")
-    if keras_value:
-        plt.axhline(y=keras_value, c='r')
-    plt.title("LPIPS")
-    plt.ylabel('Loss value')
-    plt.xlabel('Model')
-    plt.xticks(indices, [""]*len(tbl))
-    plt.show()
-    return 
+    return color_recovery,compress50_recovery, compress90_recovery
+
+    # tbl = ssim
+    # indices = np.arange(len(tbl))
+    # plt.scatter(indices,tbl,s=45)
+    # keras_value = keras_values.get("ssim")
+    # if keras_value:
+    #     plt.axhline(y=keras_value, c='r')
+    # plt.title("SSIM")
+    # plt.ylabel('Loss value')
+    # plt.xlabel('Model')
+    # plt.xticks(indices, [""]*len(tbl))
+    # plt.show()
+    # return
     # boxplot([np.array(psnr)/100,np.array(lpips), np.array(ssim)],"Similarity metrics", ("psnr","lpips","ssim"))
     # plt.show()
     #return
@@ -230,14 +240,76 @@ def runc(experiment_time="1572371338"):
     m = min(decoding_recovery)
     mx = max(decoding_recovery)
     plt.xlim(m,mx)
-    b = bins+1/n_bins/2
+    b = bins#+1/n_bins/2
     plt.xticks(b,np.around(b,2))
 
     plt.show()
 
 
 if __name__ == "__main__":
+
+    font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 16}
+
+    matplotlib.rc('font', **font)
+
     # runa(experiment_time="experimentSP9/1571050357 - Copie")
-    # runa("experimentSP9/merged")
-    # runb(experiment_time="experimentSP9b/merged")
-    runc()
+    rotate_recovery,crop_recovery,upscale_recovery,compress_recovery = runa("experimentSP9/merged")
+    color_recovery,compress50_recovery, compress90_recovery = runb(experiment_time="experimentSP9b/merged")
+
+    recoveries = np.array([rotate_recovery,crop_recovery,upscale_recovery,compress_recovery, color_recovery,compress50_recovery, compress90_recovery])
+    min_recovery = recoveries.min(axis=0)
+    best_min = np.argmax(min_recovery)
+    print(best_min, recoveries[:,best_min])
+
+
+    best_rotate = np.argmax(rotate_recovery)
+    best_crop = np.argmax(crop_recovery)
+    best_compress = np.argmax(compress_recovery)
+    best_upscale = np.argmax(upscale_recovery)
+    best_color = np.argmax(color_recovery)
+    best_compress50 = np.argmax(compress50_recovery)
+    best_compress90 = np.argmax(compress90_recovery)
+
+    rotates = (rotate_recovery[best_rotate] , crop_recovery[best_rotate], upscale_recovery[best_rotate],color_recovery[best_rotate], compress50_recovery[best_rotate], compress_recovery[best_rotate], compress90_recovery[best_rotate])
+    crops = (rotate_recovery[best_crop] , crop_recovery[best_crop], upscale_recovery[best_crop],color_recovery[best_crop], compress50_recovery[best_crop], compress_recovery[best_crop], compress90_recovery[best_crop] )
+    compress = (rotate_recovery[best_compress] , crop_recovery[best_compress], upscale_recovery[best_compress],color_recovery[best_compress], compress50_recovery[best_compress], compress_recovery[best_compress], compress90_recovery[best_compress] )
+    upscales = (rotate_recovery[best_upscale] , crop_recovery[best_upscale], upscale_recovery[best_upscale],color_recovery[best_upscale], compress50_recovery[best_upscale], compress_recovery[best_upscale], compress90_recovery[best_upscale])
+    colors = (rotate_recovery[best_color] , crop_recovery[best_color], upscale_recovery[best_color],color_recovery[best_color], compress50_recovery[best_color], compress_recovery[best_color], compress90_recovery[best_color])
+    compress50 = (rotate_recovery[best_compress50] , crop_recovery[best_compress50], upscale_recovery[best_compress50],color_recovery[best_compress50], compress50_recovery[best_compress50], compress_recovery[best_compress50], compress90_recovery[best_compress50])
+    compres90 = (rotate_recovery[best_compress90] , crop_recovery[best_compress90], upscale_recovery[best_compress90],color_recovery[best_compress90], compress50_recovery[best_compress90], compress_recovery[best_compress90], compress90_recovery[best_compress90])
+
+    print("best_rotate",rotates)
+    print("best_crop", crops)
+    print("best_compress",compress)
+    print("best_upscale",upscales)
+
+    _colors = ["blue","green","red","yellow","cyan","magenta","black"]
+    labels = ["Rotation","Cropping","Upscale","Color","Compress(50)","Compress(75)","Compress(90)"]
+    vals = [rotates, crops, upscales, colors, compress50, compress, compres90]
+    bests = [best_rotate,best_crop,best_upscale, best_color, best_compress50, best_compress, best_compress90]
+    width = 0.5
+    ax = plt.subplot(111)
+    x = np.arange(0,len(labels)*len(labels)*(width+0.1),(width+0.1)*len(labels))
+    print(x)
+    for i, y in enumerate(vals):
+        ax.bar(x+i*width, list(y), width=width, color=_colors[i])#, align='center')
+
+    #ax.bar(x-1/2*width, list(crops), width=width, color='green', align='center')
+    #ax.bar(x+1/2*width, list(compress), width=width, color='red', align='center')
+    #ax.bar(x+3/2*width, list(upscales), width=width, color='yellow', align='center')
+    #ax.xaxis_date()
+
+
+    patches = [mpatches.Patch(color=c, label='Model {}'.format(bests[i])) for i, c in enumerate(_colors)]
+    path_1 = mpatches.Patch(color='blue', label='Model {}'.format(best_rotate))
+    path_2 = mpatches.Patch(color='green', label='Model {}'.format(best_crop))
+    path_3 = mpatches.Patch(color='red', label='Model {}'.format(best_compress))
+    path_4 = mpatches.Patch(color='yellow', label='Model {}'.format(best_upscale))
+    plt.legend(handles=patches)
+    plt.xticks(x+len(labels)*width/2, labels)
+    plt.ylabel('Recovery rate')
+    plt.show()
+
+    #runc()

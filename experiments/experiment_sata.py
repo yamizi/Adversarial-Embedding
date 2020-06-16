@@ -11,19 +11,12 @@ from experiments import logger, RANDOM_SEED, DATASET_CLASSES
 
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"]="-1"    
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
-import tensorflow as tf
-from keras.utils import to_categorical
-from keras.preprocessing.image import save_img, load_img, img_to_array, array_to_img
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
             
 import numpy as np
-import random, json, time, os, math
-from utils.adversarial_models import load_model
-from metrics.attacks import craft_attack
+import random, json, time, os
 from utils.sorted_attack import SATA
 
-from PIL import Image
-from metrics.perceptual_metrics import lpips_distance, ssim_distance
 
 experiment_time = int(time.time())
 strs = "01"
@@ -32,6 +25,7 @@ default_extension = "png"
 palette = 256
 
 import matplotlib.pyplot as plt
+import matplotlib
 
 def _encodeString(txt):
     base = len(strs)
@@ -48,12 +42,12 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
         pass
 
     
-    l = 6643
+    l = 33000 #6643
     
-    num_classes_tbl = (10,)
+    num_classes_tbl = (10000,)
     #num_classes_tbl =[10000]
     nb_trials = 100
-    nb_steps = 10
+    nb_steps = 1000
 
     nb_pictures = []
     nb_pixels = 32*32*3
@@ -71,25 +65,27 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
             x = np.arange(len(nb_picture))+1
             x = x * (num_classes_tbl[i]/nb_steps)
 
-
             fig, ax1 = plt.subplots()
 
             color = 'tab:red'
             ax1.set_xlabel('Nb classes embedded per image (k)')
             ax1.set_ylabel('Embedding Density (Bits Per Pixel)', color=color)
-            ax1.plot(x, density, color=color)
+            ax1.plot(x, density, color=color, linewidth=2)
             ax1.tick_params(axis='y', labelcolor=color)
 
             ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
             color = 'tab:blue'
             ax2.set_ylabel('Number of images to embed the message', color=color)  # we already handled the x-label with ax1
-            ax2.plot(x, nb_picture, color=color)
+            ax2.plot(x, nb_picture, color=color, linewidth=2)
             ax2.tick_params(axis='y', labelcolor=color)
 
             fig.tight_layout()  # otherwise the right y-label is slightly clipped
             plt.title("Embedding density for N={}".format(num_classes_tbl[i]))
             #plt.plot(x,density)
+
+            print("density",density)
+            print("nb_picture",nb_picture)
 
         plt.show()
 
@@ -115,6 +111,7 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
 
     plot(nb_pictures)
 
+    return
     folder = "./experiments/results/experiment{}".format("sata")
     os.makedirs(folder,exist_ok=True)
     with open("{}/{}.json".format(folder, "_".join(num_classes_tbl)), 'a') as f:
@@ -122,5 +119,11 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
 
 
 if __name__ == "__main__":
+    font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 16}
+
+    matplotlib.rc('font', **font)
+
     run()
 
