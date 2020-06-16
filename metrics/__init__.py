@@ -4,7 +4,6 @@ import sys
 import numpy as np
 from sklearn.neighbors import KernelDensity
 from art.classifiers import KerasClassifier
-from .attacks import eval_attack_robustness
 from .toolbox_metrics import clever_u
 
 # Configure a logger to capture ART outputs; these are printed in console and the level of detail is set to INFO
@@ -34,6 +33,9 @@ class Metrics():
     
     @staticmethod
     def eval_robustness(keras_model, x_set, scores=["clever"]):
+        
+        from .attacks import eval_attack_robustness
+        
         robustness = {}
         if not keras_model:
             return 

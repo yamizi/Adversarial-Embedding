@@ -398,15 +398,15 @@ class TrackedPGD(ProjectedGradientDescent):
             adv_x = x#.astype(NUMPY_DTYPE)
             noise = np.zeros_like(x)
             for i_max_iter in range(self.max_iter):
-
-                adv_x = self._compute(adv_x, targets, self.eps, self.eps_step,
+# x, x_init, y, eps, eps_step, project, random_init
+                adv_x = self._compute(adv_x, x, targets, self.eps, self.eps_step, self._project, 
                                       self.num_random_init > 0 and i_max_iter == 0)
-                if self._project:
-                    noise = projection(adv_x - x, self.eps, self.norm)
-                    adv_x = x + noise
+                # if self._project:
+                #     noise = projection(adv_x - x, self.eps, self.norm)
+                #     adv_x = x + noise
 
                 rate = 100 * compute_success(self.classifier, x, targets, adv_x, self.targeted)
-                logger.info('Success rate of attack step: %.2f%%', rate)
+                #logger.info('Success rate of attack step: %.2f%%', rate)
 
                 noise_norm  = 0
                 if self.norm == np.inf:
@@ -419,11 +419,15 @@ class TrackedPGD(ProjectedGradientDescent):
                     noise_norm = np.sqrt(np.sum(np.square(noise), axis=ind, keepdims=True))
                     
                 TrackedPGD.tracked_x.append((adv_x,rate,i_max_iter, noise_norm))
+                if rate>=100:
+                    break
 
             rate = 100 * compute_success(self.classifier, x, targets, adv_x, self.targeted)
             if rate > rate_best or adv_x_best is None:
                 rate_best = rate
                 adv_x_best = adv_x
+            if rate>=100:
+                break
             
 
         logger.info('Success rate of attack: %.2f%%', rate_best)

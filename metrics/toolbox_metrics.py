@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 
 supported_methods = {
     "fgsm": {"class": FastGradientMethod, "params": {"eps_step": 0.1, "eps_max": 1., "clip_min": 0., "clip_max": 1.}},
-    "pgd": {"class":TrackedPGD},
-    "cw": {"class":TrackedCW},
+    "pgd": {"class":ProjectedGradientDescent},
+    "cw": {"class":CarliniL2Method},
     #"jsma": {"class": SaliencyMapMethod, "params": {"theta": 0.1, "gamma": 1, "clip_min": 0., "clip_max": 1.}}
     "jsma": {"class": SaliencyMapMethod, "params": {"theta": 1., "gamma": 0.01, "clip_min": 0., "clip_max": 1.}}
     }

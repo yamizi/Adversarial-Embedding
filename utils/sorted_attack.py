@@ -51,7 +51,9 @@ class SATA(ProjectedGradientDescent):
 
     @staticmethod
     def embed_message(model, x, msg,epsilon=1., num_random_init=10, max_iter=100, class_density=0.7, groups_only=False,num_classes=0,nb_classes_per_img=0):
-        num_classes = model.output_shape[1]
+
+        if num_classes==0:
+            num_classes = model.output_shape[1]
         chunk_size = int(math.log(num_classes)/math.log(10))
         
         if nb_classes_per_img==0:

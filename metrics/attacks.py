@@ -1,6 +1,6 @@
 from metrics.toolbox_metrics import empirical_robustness, get_crafter
-from utils.attack_classifier import KerasClassifier
-
+#from utils.attack_classifier import KerasClassifier
+from art.classifiers import KerasClassifier
 
 def get_attack_params(attack_name, norm=2, eps=1., minimal=True):
     attack_params = {"norm": norm,'minimal': minimal,"targeted":False}

@@ -25,19 +25,21 @@ class AdversarialGenerator(keras.utils.Sequence):
         return str(int(txt, base))
 
     def decodeString(n):
+        n= int(n)
         base = len(AdversarialGenerator.strs)
         
         if n < base:
             return AdversarialGenerator.strs[n]
         else:
-            return _decodeString(n//base) + AdversarialGenerator.strs[n%base]
+            return AdversarialGenerator.decodeString(n//base) + AdversarialGenerator.strs[n%base]
     
 
     def _encode(self, sub_x):
        
         epsilon = 2.0
-        max_iter = 10
+        max_iter = 1#0
         SATA.power = 2
+        SATA.num_cover_init = 2
         begin = time.time()
 
         model, _, _, _, _ = load_model(**self.model_params)
@@ -107,7 +109,7 @@ class AdversarialGenerator(keras.utils.Sequence):
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
-        self.indexes = np.arange(len(self.labels))
+        self.indexes = np.arange(len(self.set))
         if self.shuffle == True:
             np.random.shuffle(self.indexes)
 
@@ -142,36 +144,65 @@ class AdversarialGenerator(keras.utils.Sequence):
 
         #return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
 
-    def generate(self,count=10):
+    def adjust_batch_size(self):
+        model, _, _, _, _ = load_model(**self.model_params)
+        groups = SATA.embed_message(model,None,self.secret_message, nb_classes_per_img=self.class_per_image,groups_only=True)
+        self.batch_size = len(groups)
+
+    def generate(self,count=10, plain=False, detector_model=None, truth_set=None,detector_model_params=None):
         while True:
             for index in range(count):
                 self.on_epoch_end()
-                print("--> index",index)
+                #print("--> index",index)
                 # Generate indexes of the batch
                 indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
                 #print("*** indexes", indexes)
 
-                
-                #print("indexes",indexes[:5])
-                
+                #print("indexes",indexes.shape)
+
+
                 adv_x, ref_x, rate_best, model = self._encode(self.set[indexes,:])
                 ref_y = model.predict(ref_x)
 
-                nb_elements = adv_x.shape[0]
-                #self.list_IDs = list(range(nb_elements))
-                
-                X = np.concatenate(([adv_x],[ref_x]),axis=1)
-                y = np.concatenate(([np.zeros(nb_elements)] ,[np.ones(nb_elements)]),axis=1)
-                y= keras.utils.to_categorical(y, num_classes=2)
-                X = np.squeeze(X)
-                y = np.squeeze(y)
-                #print("****X",X.shape,y.shape)
-                
-                lcr, variance, kde = get_uncertain_predictions(model, np.array([adv_x,ref_x]), ref_x,ref_y)
-                lcr, variance, kde = np.array(lcr).reshape((-1,1)), np.array(variance).reshape((-1,1)), np.array(kde).reshape((-1,1))
+                if plain:
+                    X = adv_x
+                    y = ref_y
+                    for i,x in enumerate(X):
+                        #print("plain")
+                        yield x, y[i]
+                else:
+                    if detector_model is None:
+                        detector_model = model
+                    else:
+                        print("adversarial model",detector_model_params)
+                        model_params = self.model_params
+                        model_params["dataset"] = detector_model_params["dataset"]
+                        model_params["model_type"] = detector_model_params["model_type"]
 
-                metrics = np.concatenate((lcr, variance, kde),axis=1)
+                        detector_model, _, _, _, _ = load_model(**model_params)
 
-                #print("****LCR",lcr.shape,variance.shape,kde.shape,metrics.shape)
-                for i,x in enumerate(X):
-                    yield x, y[i], metrics[i]
+                    nb_elements = adv_x.shape[0]
+                    #self.list_IDs = list(range(nb_elements))
+
+                    if truth_set is None:
+                        ground_truth = self.set[indexes,:]
+                    else:
+                        ground_truth = truth_set[indexes,:]
+
+                    ground_truth = ground_truth[0:len(adv_x),:]
+                    X = np.concatenate(([adv_x],[ground_truth]),axis=1)
+                    y = np.concatenate(([np.zeros(nb_elements)] ,[np.ones(nb_elements)]),axis=1)
+                    y= keras.utils.to_categorical(y, num_classes=2)
+                    X = np.squeeze(X)
+                    y = np.squeeze(y)
+
+                    print("index", index, adv_x.shape, ground_truth.shape)
+
+                    lcr, variance, kde = get_uncertain_predictions(detector_model, np.array([adv_x,ground_truth]), ref_x,ref_y)
+                    lcr, variance, kde = np.array(lcr).reshape((-1,1)), np.array(variance).reshape((-1,1)), np.array(kde).reshape((-1,1))
+
+                    metrics = np.concatenate((lcr, variance, kde),axis=1)
+
+                    #print("****LCR",lcr.shape,variance.shape,kde.shape,metrics.shape)
+                    for i,x in enumerate(X):
+                        yield x, y[i], metrics[i]
