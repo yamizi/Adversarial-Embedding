@@ -12,9 +12,9 @@ Evasion Attacks have been commonly seen as a weakness of Deep Neural Networks. I
 
 Recommended citation: Ghamizi, S., Cordy, M., Papadakis, M., & Traon, Y.L. (2021). Evasion Attack STeganography: Turning Vulnerability Of Machine Learning To Adversarial Attacks Into A Real-world Application. Proceedings / IEEE International Conference on Computer Vision. IEEE International Conference on Computer Vision. 
 
-This project is now a Pytorch project. If you want the previous version (with SATA algorithm), please check the branch "master-SATA"
-The "EAST" branch contains the exact version of the code of the ICCV - AROW paper
-The "main" branch will contain the new code and updates of our Steganography package.
+This project is now a Pytorch project. If you want the previous version (with SATA algorithm and *Tensorflow*), please check the branch "master-SATA"
+
+The "main" branch will contain the new code and updates of our Steganography package (With *Pytorch*).
 
 
 ## Prerequisite
