@@ -62,7 +62,7 @@ def _encode(msg,dataset, model_type, epochs, experiment_id,attack_name, attack_s
     encoded_msg = _encodeString(msg)
     logger.info("Encode message {}=>{}".format(msg,encoded_msg))
     test_size = len(encoded_msg)
-    model, x_train, x_test, y_train, y_test = load_model(dataset=dataset, model_type=model_type, epochs=epochs)
+    model, x_train, x_test, y_train, y_test = load_model(dataset=dataset, model_type=model_type, epochs=epochs, use_tensorboard=True)
     num_classes= DATASET_CLASSES[dataset]
 
     combined = list(zip(x_test, y_test))
@@ -82,10 +82,10 @@ def _encode(msg,dataset, model_type, epochs, experiment_id,attack_name, attack_s
     targets = np.array(to_categorical([int(i) for i in encoded_msg], num_classes), "int32")    
     #print(targets)
 
-    class_density = 0.03
+    class_density = 0.03 # total class * density = total attacked classes
     epsilon = 5.0
     max_iter = 100
-    SATA.power = 2
+    SATA.power = 1.5
     nb_elements = 1000
 
     adv_x, rate_best = SATA.embed_message(model,x_test[:nb_elements],encoded_msg, epsilon=epsilon,class_density=class_density)
@@ -150,4 +150,4 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP31"):
     
     
 if __name__ == "__main__":
-    run(model_type="resnet")
+    run(model_type="resnet", exp_id="test_{}".format(random.randint(0,10000)), epochs=100)

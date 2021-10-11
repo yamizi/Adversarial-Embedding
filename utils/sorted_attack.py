@@ -50,7 +50,7 @@ class SATA(ProjectedGradientDescent):
         return groups
 
     @staticmethod
-    def embed_message(model, x, msg,epsilon=1., num_random_init=10, max_iter=100, class_density=0.7, groups_only=False,num_classes=0,nb_classes_per_img=0):
+    def embed_message(model, x, msg,epsilon=1., num_random_init=10, max_iter=100, class_density=0.7, eps_step=0.1, groups_only=False,num_classes=0,nb_classes_per_img=0):
 
         if num_classes==0:
             num_classes = model.output_shape[1]
@@ -60,7 +60,7 @@ class SATA(ProjectedGradientDescent):
             nb_classes_per_img = int(class_density*num_classes)
         
         norm = 2
-        SATA.power = 2.5
+        #SATA.power = 2.5
         SATA.success_rates = []
 
         groups = SATA._split_msg(msg, chunk_size, nb_classes_per_img)
@@ -93,7 +93,7 @@ class SATA(ProjectedGradientDescent):
         #print("embed attack shape",x.shape,np.array(groups).shape)
 
         classifier = KerasClassifier(model=model, use_logits=False)
-        crafter = SATA(classifier,num_random_init=num_random_init, max_iter=max_iter, eps=1.)
+        crafter = SATA(classifier,num_random_init=num_random_init, max_iter=max_iter, eps=1., eps_step=eps_step)
         crafter.nb_classes_per_img = nb_classes_per_img
         crafter.set_params(**attack_params)
         
@@ -151,6 +151,25 @@ class SATA(ProjectedGradientDescent):
 
         return adv_x
 
+    def _compute_perturbation(self, batch, batch_labels):
+        # Pick a small scalar to avoid division by 0
+        tol = 10e-8
+
+        # Get gradient wrt loss; invert it if attack is targeted
+        grad = self.classifier.loss_gradient(batch, batch_labels) * (1 - 2 * int(self.targeted))
+
+        # Apply norm bound
+        if self.norm == np.inf:
+            grad = np.sign(grad)
+        elif self.norm == 1:
+            ind = tuple(range(1, len(batch.shape)))
+            grad = grad / (np.sum(np.abs(grad), axis=ind, keepdims=True) + tol)
+        elif self.norm == 2:
+            ind = tuple(range(1, len(batch.shape)))
+            grad = grad / (np.sqrt(np.sum(np.square(grad), axis=ind, keepdims=True)) + tol)
+        assert batch.shape == grad.shape
+
+        return grad
 
     def compute_success(self, classifier, x_clean, labels, x_adv, targeted=False):
         """

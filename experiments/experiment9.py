@@ -49,8 +49,7 @@ def _load_image( infilename ) :
 
 def _compress_img(img, rate=75, format='jpeg', palette=256):
     from io import BytesIO
-    
-    
+
     byteImgIO  = BytesIO()
     img.save(byteImgIO , format=format,quality=75)
     byteImgIO.seek(0)

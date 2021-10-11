@@ -3,8 +3,6 @@ High Density embedding theory
 52 bits message
 """
 
-
-
 import sys
 sys.path.append("./")
 from experiments import logger, RANDOM_SEED, DATASET_CLASSES
@@ -31,16 +29,12 @@ def _encodeString(txt):
     base = len(strs)
     return str(int(txt, base))
 
-
 def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
 
-
-    
     if RANDOM_SEED>0:
         # random.seed(RANDOM_SEED)
         # np.random.seed(RANDOM_SEED)
         pass
-
     
     l = 33000 #6643
     
@@ -53,7 +47,6 @@ def run(dataset="cifar100",model_type="basic", epochs = 50, exp_id="SP_sata"):
     nb_pixels = 32*32*3
 
 
-    
     def plot(nb_pictures):
         for i,nb_picture in enumerate(nb_pictures):
             # plt.figure()

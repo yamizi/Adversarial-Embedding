@@ -85,7 +85,7 @@ def _encode(msg,dataset, model_type, epochs, experiment_id,attack_name, attack_s
 
     epsilon = 5.0
     max_iter = 100
-    SATA.power = 2
+    SATA.power = 1.5
     nb_elements = 1000
 
     sub_x = x_test[:nb_elements]
@@ -125,7 +125,7 @@ def run(dataset="cifar10",model_type="basic", epochs = 25, exp_id="_gen_dataset"
     l = 52
     nb_messages = 1000
 
-    nb_classes = [1,2,3]
+    nb_classes = [2,3]
     #nb_classes = [4,5]
     for nb_cls in nb_classes:
         experiment_id = "{}/{}".format(exp_id,nb_cls)

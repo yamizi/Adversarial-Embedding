@@ -9,7 +9,7 @@ from utils.tiny_imagenet import tiny_imagenet_dataset
 from utils.resnetCifar10 import run
 from utils.feinman17 import get_model as get_feinman_model
 
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
 from keras.callbacks import ReduceLROnPlateau
 from keras.preprocessing.image import ImageDataGenerator
 import math
@@ -43,7 +43,7 @@ def lr_schedule(epoch):
     print('Learning rate: ', lr)
     return lr
 
-def train_model(model, x_train, y_train, x_test, y_test, epochs, batch_size, scheduler=False, data_augmentation=False, data_folder=None):
+def train_model(model, x_train, y_train, x_test, y_test, epochs, batch_size, scheduler=False, data_augmentation=False, data_folder=None, use_tensorboard=False):
 
     
     lr_scheduler = LearningRateScheduler(lr_schedule)
@@ -62,7 +62,11 @@ def train_model(model, x_train, y_train, x_test, y_test, epochs, batch_size, sch
     model_name = 'temp_model.h5'
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
-       
+
+    if use_tensorboard:
+        tensorboard_callback = TensorBoard(log_dir=os.path.join(save_dir, "tensorboard"), histogram_freq=1)
+        callbacks.append(tensorboard_callback)
+
     model_path = os.path.join(save_dir, model_name)
     mc = ModelCheckpoint(model_path, monitor='val_loss', mode='min', save_best_only=True)
     callbacks.append(mc)
@@ -445,7 +449,7 @@ def load_dataset(dataset="cifar10"):
 
     return num_classes, x_train, y_train, x_test, y_test
 
-def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batch_size=64, data_augmentation=True):
+def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batch_size=64, data_augmentation=True, use_tensorboard=False):
     from keras.utils import multi_gpu_model
     from keras.utils import multi_gpu_utils
     from tensorflow.python.client import device_lib
@@ -493,16 +497,16 @@ def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batc
         
 
         if model_type=="basic":
-            model, _, _, _, _ = basic_model(epochs, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset)
+            model, _, _, _, _ = basic_model(0, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset)
         elif model_type=="mobilenet":
-            model, _, _, _, _ = mobilenet(epochs, batch_size, train_size=train_size, data_augmentation=data_augmentation)
+            model, _, _, _, _ = mobilenet(0, batch_size, train_size=train_size, data_augmentation=data_augmentation)
         elif model_type=="resnet":
-            model, _, _, _, _ = manual_resnet(epochs, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset)
+            model, _, _, _, _ = manual_resnet(0, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset)
 
         elif model_type[:7]=="feinman":
             model = get_feinman_model(dataset)
 
-        model = train_model(model, x_train, y_train, x_test, y_test, epochs, batch_size, True, data_augmentation)
+        model = train_model(model, x_train, y_train, x_test, y_test, epochs, batch_size, True, data_augmentation, use_tensorboard=use_tensorboard)
 
         # Score trained model.
         scores = model.evaluate(x_test, y_test, verbose=1)

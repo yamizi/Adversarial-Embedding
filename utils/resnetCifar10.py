@@ -10,7 +10,7 @@ from keras.datasets import cifar10, cifar100
 import numpy as np
 import os
 from keras.utils import multi_gpu_model
-
+from keras.callbacks import  LearningRateScheduler, ReduceLROnPlateau, TensorBoard
 # Training parameters
   # orig paper trained all networks with batch_size=128
 
@@ -38,7 +38,7 @@ subtract_pixel_mean = True
 # Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)
 
 
-def run(batch_size = 128,epochs = 300,data_augmentation = False,num_classes = 10, n = 3, version = 1, adam=False, scheduler=False, train_size=0 ):
+def run(batch_size = 128,epochs = 300,data_augmentation = False,num_classes = 10, n = 3, version = 1, adam=False, scheduler=False, train_size=0, dataset=None ):
     # Computed depth from supplied model parameter n
     if version == 1:
         depth = n * 6 + 2
@@ -49,34 +49,36 @@ def run(batch_size = 128,epochs = 300,data_augmentation = False,num_classes = 10
     model_type = 'ResNet%dv%d' % (depth, version)
 
     # Load the CIFAR10 data.
-    (x_train, y_train), (x_test, y_test) = cifar100.load_data() if num_classes==100 else cifar10.load_data()
+    if dataset is not None:
+        (num_classes, x_train, y_train, x_test, y_test) = dataset
+    else:
+        (x_train, y_train), (x_test, y_test) = cifar100.load_data() if num_classes==100 else cifar10.load_data()
+
+        # Normalize data.
+        x_train = x_train.astype('float32') / 255
+        x_test = x_test.astype('float32') / 255
+
+        if train_size:
+            x_train = x_train[:train_size]
+            y_train = y_train[:train_size]
+
+        # If subtract pixel mean is enabled
+        if subtract_pixel_mean:
+            x_train_mean = np.mean(x_train, axis=0)
+            x_train -= x_train_mean
+            x_test -= x_train_mean
+
+        print('x_train shape:', x_train.shape)
+        print(x_train.shape[0], 'train samples')
+        print(x_test.shape[0], 'test samples')
+        print('y_train shape:', y_train.shape)
+
+        # Convert class vectors to binary class matrices.
+        y_train = keras.utils.to_categorical(y_train, num_classes)
+        y_test = keras.utils.to_categorical(y_test, num_classes)
 
     # Input image dimensions.
     input_shape = x_train.shape[1:]
-
-    # Normalize data.
-    x_train = x_train.astype('float32') / 255
-    x_test = x_test.astype('float32') / 255
-
-    if train_size:
-        x_train = x_train[:train_size]
-        y_train = y_train[:train_size]
-
-    # If subtract pixel mean is enabled
-    if subtract_pixel_mean:
-        x_train_mean = np.mean(x_train, axis=0)
-        x_train -= x_train_mean
-        x_test -= x_train_mean
-
-    print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
-    print('y_train shape:', y_train.shape)
-
-    # Convert class vectors to binary class matrices.
-    y_train = keras.utils.to_categorical(y_train, num_classes)
-    y_test = keras.utils.to_categorical(y_test, num_classes)
-
 
 
     def resnet_layer(inputs,
@@ -328,7 +330,22 @@ def run(batch_size = 128,epochs = 300,data_augmentation = False,num_classes = 10
     #                             verbose=2,
     #                             save_best_only=True)
 
-    
+    tensorboard_callback = TensorBoard(log_dir="./tensorboard", histogram_freq=1)
+
+    lr_reducer = ReduceLROnPlateau(factor=np.sqrt(0.1),
+                                   cooldown=0,
+                                   patience=25,
+                                   min_lr=0.5e-6)
+
+    callbacks = [lr_reducer, tensorboard_callback]
+
+    if epochs >0:
+        model.fit(x_train, y_train,
+                  batch_size=batch_size,
+                  epochs=epochs,
+                  validation_data=(x_test, y_test),
+                  shuffle=True,
+                  callbacks=callbacks)
 
     return model, x_train, x_test, y_train, y_test
 
