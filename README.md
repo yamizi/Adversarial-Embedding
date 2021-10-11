@@ -1,7 +1,7 @@
 # Adversarial Embedding
 
 
-This is the code release for our ppaper "Evasion Attack STeganography: Turning Vulnerability Of Machine Learning To Adversarial Attacks Into A Real-world Application"
+This is the code release for our paper "Evasion Attack STeganography: Turning Vulnerability Of Machine Learning To Adversarial Attacks Into A Real-world Application"
 
 Published in ICCV2021 - AROW 
 
