@@ -1,29 +1,22 @@
 # Adversarial Embedding
 
-This is the code release for our IEEE Symposium on Security and Privacy 2020 submitted paper entitled Adversarial Embedding: A robust and elusive Steganography and Watermarking technique.
-A pre-print can be requested on our repository: https://orbilu.uni.lu/handle/10993/40970 
 
+This is the code release for our ppaper "Evasion Attack STeganography: Turning Vulnerability Of Machine Learning To Adversarial Attacks Into A Real-world Application"
+Published in ICCV - AROW, 2021
 
-## Abstract of the paper
-We propose adversarial embedding, a new steganography and watermarking technique that embeds secret information within images. The key idea of our method is to use deep neural networks for image classification and adversarial attacks to embed secret information within images. Thus, we use the attacks to embed an encoding of the message within images and the related deep neural network  outputs to extract it. The key properties of adversarial attacks (invisible perturbations, nontransferability, resilience to tampering) offer guarantees regarding the confidentiality and the integrity of the hidden messages.
-We empirically evaluate adversarial embedding using more than 100 models and 1,000 messages. Our results confirm that our
-embedding passes unnoticed by both humans and steganalysis methods, while at the same time impedes illicit retrieval of the
-message (less than 13% recovery rate when the interceptor has some knowledge about our model), and is resilient to soft and (to
-some extent) aggressive image tampering (up to 100% recovery rate under jpeg compression). We further develop our method
-by proposing a new type of adversarial attack which improves the embedding density (amount of hidden information) of our
-method to up to 10 bits per pixel.
+## Abstract
+Evasion Attacks have been commonly seen as a weakness of Deep Neural Networks. In this paper, we flip the paradigm and envision this vulnerability as a useful application. We propose EAST, a new steganography and watermarking technique based on multi-label targeted evasion attacks. The key idea of EAST is to encode data as the labels of the image that the evasion attacks produce. Our results confirm that our embedding is elusive; it not only passes unnoticed by humans, steganalysis methods , and machine-learning detectors. In addition, our embedding is resilient to soft and aggressive image tampering (87% recovery rate under jpeg compression). EAST out-performs existing deep-learning-based steganography approaches with images that are 70% denser and 73% more robust and supports multiple datasets and architectures.
 
+Recommended citation: Ghamizi, S., Cordy, M., Papadakis, M., & Traon, Y.L. (2021). Evasion Attack STeganography: Turning Vulnerability Of Machine Learning To Adversarial Attacks Into A Real-world Application. Proceedings / IEEE International Conference on Computer Vision. IEEE International Conference on Computer Vision. 
 
-*The SATA attack and all the experiments are tested on Ubuntu 16.04 (64-bit) and Windows 10 (64-bits), but should be compatible with other major Linux/MacOS distros and versions. Feel free to contact [Salah Ghamizi](https://wwwen.uni.lu/snt/people/salah_ghamizi) if you run into any problem running or building our tools or running the experiments.*
-
-The experiments of the paper are available in the dedicated folder */experiments/*
-
-The SATA attack we propose in the papers is available in the file */utils/sorted_attack.py*
+This project is now a Pytorch project. If you want the previous version (with SATA algorithm), please check the branch "master"
+The "EAST" branch contains the exact version of the code of the ICCV - AROW paper
+The "main" branch will contain the new code and updates of our Steganography package.
 
 
 ## Prerequisite
 ### Python
-The code should be run using python 3.5, Keras & Tensorflow frameworks. We recommend using conda for a dedicated environment
+The code should be run using python 3.8, torch==1.7.1. We recommend using conda for a dedicated environment
 
 ### Requirements installation
 
@@ -32,14 +25,3 @@ You can use either conda or pip to install the project requirements.
 ```bash
 sudo pip install -r ./requirements.txt
 ```
-
-This project uses a customized version of [Aletheia Library](aletheia/README.md), [Perceptual Similarity Library](lpips-tensorflow/README.md) and [SSIM Similarity Library](pyssim/README.md). You should refer to their installation instructions (in the previous links) for guidance on how to set them up (for instance Aletheia requires Octave).
-
-if your machine does not support gpu, replace *tensorflow-gpu* in the requirements file by the CPU version.
-
-### Deep Learning Models installation
-
-The current repository contains the code to build the ResNet and KerasNet classification model.
-The experiments that have been run on 100 pre-sampled models require however to sample and generate these models using [FeatureNet](https://github.com/yamizi/FeatureNet) 
-
-FeatureNet is a tool that allows to generate a large number of DNN neural networks under the constraint of diversity. This ensures that our experiments cover a large span of architectures and models.
