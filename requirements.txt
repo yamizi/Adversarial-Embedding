@@ -105,7 +105,7 @@ torchsummary==1.5.1
 torchvision==0.8.2
 typed-ast==1.4.3
 typing-extensions==3.7.4.3
-urllib3==1.25.9
+urllib3==1.26.5
 w3lib==1.22.0
 waitress==1.4.4
 websocket-client==0.57.0
