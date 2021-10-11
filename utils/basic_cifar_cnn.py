@@ -69,7 +69,7 @@ def lr_schedule(epoch):
     #print('Learning rate schedule: ', lr)
     return lr
 
-def get_model(epochs=100, batch_size=32, data_augmentation=False, train_size=0, dataset="cifar10"):
+def get_model(epochs=100, batch_size=32, data_augmentation=False, train_size=0, dataset="cifar10", hidden_size=512):
 
     num_classes, x_train, y_train, x_test, y_test = get_dataset(dataset) if dataset =="cifar10" else dataset
     if train_size:
@@ -94,7 +94,7 @@ def get_model(epochs=100, batch_size=32, data_augmentation=False, train_size=0, 
 
 
     model.add(Flatten())
-    model.add(Dense(512))
+    model.add(Dense(hidden_size))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
     model.add(Dense(num_classes))

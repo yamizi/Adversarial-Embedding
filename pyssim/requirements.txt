@@ -1,4 +1,0 @@
-pillow
-numpy
-scipy
-argparse

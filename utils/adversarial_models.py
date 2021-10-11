@@ -449,7 +449,7 @@ def load_dataset(dataset="cifar10"):
 
     return num_classes, x_train, y_train, x_test, y_test
 
-def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batch_size=64, data_augmentation=True, use_tensorboard=False):
+def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batch_size=64, data_augmentation=True, use_tensorboard=False, hidden_size=512):
     from keras.utils import multi_gpu_model
     from keras.utils import multi_gpu_utils
     from tensorflow.python.client import device_lib
@@ -497,7 +497,7 @@ def load_model(dataset="cifar10",model_type="basic",epochs=1, train_size=0, batc
         
 
         if model_type=="basic":
-            model, _, _, _, _ = basic_model(0, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset)
+            model, _, _, _, _ = basic_model(0, batch_size, train_size=train_size, data_augmentation=data_augmentation,dataset=dataset, hidden_size=hidden_size)
         elif model_type=="mobilenet":
             model, _, _, _, _ = mobilenet(0, batch_size, train_size=train_size, data_augmentation=data_augmentation)
         elif model_type=="resnet":
