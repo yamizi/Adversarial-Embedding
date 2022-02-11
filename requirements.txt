@@ -70,7 +70,7 @@ Pillow==8.2.0
 polaris-ml==0.9.4
 prometheus-client==0.8.0
 prometheus-flask-exporter==0.14.1
-protobuf==3.11.3
+protobuf==3.15.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pydub==0.25.1
