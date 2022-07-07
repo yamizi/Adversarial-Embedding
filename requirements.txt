@@ -85,7 +85,7 @@ PyYAML==5.3.1
 querystring-parser==1.2.4
 reedsolo==0.3
 resampy==0.2.2
-rsa==4.0
+rsa==4.7
 satnogs-decoders==1.7.0
 scikit-image==0.18.1
 scikit-learn==0.23.2
