@@ -43,7 +43,7 @@ idna==2.9
 imageio==2.9.0
 itsdangerous==1.1.0
 Jinja2==2.11.2
-joblib==0.15.1
+joblib==1.2.0
 jsonschema==3.2.0
 kaitaistruct==0.8
 kiwisolver==1.2.0
